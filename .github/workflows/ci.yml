@@ -6,6 +6,7 @@ on:
 
 jobs:
   test:
+    name: Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,9 +30,6 @@ jobs:
       - name: API tests
         run: npm run test:api
 
-      - name: Mutation testing (rules and validation)
-        run: npm run test:mutation
-
       - name: Keep the test report
         if: always()
         uses: actions/upload-artifact@v4
@@ -39,6 +37,24 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  mutation:
+    name: Mutation testing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # The rules and the validation are pure, so this needs no browser and no
+      # server — it only asks whether the unit tests would notice a change.
+      - name: Mutation testing (rules and validation)
+        run: npm run test:mutation
 
       - name: Keep the mutation report
         if: always()
