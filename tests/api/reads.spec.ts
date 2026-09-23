@@ -78,7 +78,7 @@ test('A-17 myBooking belongs to whoever is asking', async ({
 
   await test.step('a cookie the server never issued is treated as none', async () => {
     const withAStaleCookie = await request.newContext({
-      baseURL: `http://localhost:${process.env.PORT ?? 3000}`,
+      baseURL: `http://localhost:${process.env.PORT ?? 3100}`,
       extraHTTPHeaders: { cookie: 'token=0e5f1a2b-dead-4000-8000-000000000000' },
     })
 
@@ -143,8 +143,7 @@ test('A-19 the session cookie is the only place the token appears', async ({ str
   expect(cookie).toContain('Path=/')
   expect(cookie).toContain('Max-Age=2592000')
 
-  // read the body as text: parsing it first would drop an extra field and
-  // hide exactly the mistake this case is about
+  // as text: parsing first would drop an extra field and hide the mistake
   const token = cookie.split('=')[1]!.split(';')[0]!
   const raw = await response.text()
   expect(raw).not.toContain(token)

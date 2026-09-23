@@ -1,40 +1,52 @@
-import { test as base, expect, request, type APIRequestContext, type Browser, type Page } from '@playwright/test'
+import {
+  test as base,
+  expect,
+  request,
+  type APIRequestContext,
+  type Browser,
+  type BrowserContext,
+  type Page,
+} from '@playwright/test'
 
-const baseURL = `http://localhost:${process.env.PORT ?? 3000}`
+const baseURL = `http://localhost:${process.env.PORT ?? 3100}`
 const studioKey = process.env.STUDIO_KEY ?? 'studio-key-for-tests'
 
 let titles = 0
 export const aTitle = (about: string) => `${about} ${process.pid}-${++titles}`
 
-/**
- * A client is created through the API and its cookie handed to a browser
- * context: filling the form again in every test would test the form, not the
- * story the scenario is about.
- */
-async function clientPage(browser: Browser, name: string) {
-  const api = await request.newContext({ baseURL })
-  const response = await api.post('/clients', {
-    data: { name, email: `${name.toLowerCase()}@example.com` },
-  })
-  expect(response.status()).toBe(201)
+/** Signed in through the API: E-02 is the scenario about the form. */
+function clientPage(browser: Browser, name: string, opened: BrowserContext[]) {
+  return base.step(
+    `${name} arrives`,
+    async () => {
+      const api = await request.newContext({ baseURL })
+      const response = await api.post('/clients', {
+        data: { name, email: `${name.toLowerCase()}@example.com` },
+      })
+      expect(response.status(), await response.text()).toBe(201)
 
-  const cookie = response
-    .headersArray()
-    .find((header) => header.name.toLowerCase() === 'set-cookie')!.value
-  const token = cookie.split('=')[1]!.split(';')[0]!
-  await api.dispose()
+      const cookie = response
+        .headersArray()
+        .find((header) => header.name.toLowerCase() === 'set-cookie')!.value
+      const token = cookie.split('=')[1]!.split(';')[0]!
+      await api.dispose()
 
-  const context = await browser.newContext({ baseURL })
-  await context.addCookies([
-    { name: 'token', value: token, domain: 'localhost', path: '/' },
-  ])
+      const context = await browser.newContext({ baseURL })
+      opened.push(context)
+      await context.addCookies([
+        { name: 'token', value: token, domain: 'localhost', path: '/' },
+      ])
 
-  return context.newPage()
+      return context.newPage()
+    },
+    { box: true },
+  )
 }
 
 type Fixtures = {
   studio: APIRequestContext
   as: (name: string) => Promise<Page>
+  visitor: Page
 }
 
 export const test = base.extend<Fixtures>({
@@ -47,8 +59,20 @@ export const test = base.extend<Fixtures>({
     await api.dispose()
   },
 
+  visitor: async ({ browser }, use) => {
+    const context = await browser.newContext({ baseURL })
+    await use(await context.newPage())
+    await context.close()
+  },
+
+  // The code after `use` runs even when the test fails.
+
   as: async ({ browser }, use) => {
-    await use((name) => clientPage(browser, name))
+    const opened: BrowserContext[] = []
+
+    await use((name) => clientPage(browser, name, opened))
+
+    for (const context of opened) await context.close()
   },
 })
 

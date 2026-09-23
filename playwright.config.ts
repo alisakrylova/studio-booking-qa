@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 
-const PORT = Number(process.env.PORT ?? 3000)
+// a port of its own: a server someone left running on 3000 is not the test server
+const PORT = Number(process.env.PORT ?? 3100)
 const STUDIO_KEY = process.env.STUDIO_KEY ?? 'studio-key-for-tests'
 
 export default defineConfig({
@@ -11,7 +12,6 @@ export default defineConfig({
   reporter: [['html', { open: 'never' }], ['list']],
   use: {
     baseURL: `http://localhost:${PORT}`,
-    // SLOW_MO=500 npm run test:e2e -- --headed, when a scenario has to be watched
     launchOptions: { slowMo: Number(process.env.SLOW_MO ?? 0) },
     trace: 'retain-on-failure',
     video: 'retain-on-failure',

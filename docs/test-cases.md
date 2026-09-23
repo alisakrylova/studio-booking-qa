@@ -9,14 +9,14 @@ at. The rules it checks are in [the requirements](requirements.md).
 | [Unit (validation)](#unit-validation) | 11 | 11 |
 | [Unit (rendering)](#unit-rendering) | 12 | 12 |
 | [API](#api) | 20 | 20 |
-| [E2E](#e2e) | 1 | 1 |
+| [E2E](#e2e) | 2 | 2 |
 | [Manual](#manual-only) | 2 | — |
-| **Total** | **68** | **66** |
+| **Total** | **69** | **67** |
 
-Three cases carry the `@smoke` tag — booking works (A-01), the waitlist
-promotion works (A-05), and a person sees it (E-01) — so that
-`npm run test:smoke` can answer in seconds whether the full suite is worth
-starting.
+Four cases carry the `@smoke` tag — a visitor can become a client (E-02),
+booking works (A-01), the waitlist promotion works (A-05), and a person sees it
+happen (E-01) — so that `npm run test:smoke` can answer in seconds whether the
+full suite is worth starting.
 
 ## Unit (rules)
 
@@ -128,11 +128,16 @@ In `tests/e2e/`.
 | ID | Case |
 |---|---|
 | E-01 | One seat. Client A books it, client B joins the waitlist and sees `Waitlisted · #1`. A cancels — and the seat does not stay free, since B already has it. B reloads and reads `Booked`. The two clients run in separate browser contexts. `@smoke` |
+| E-02 | A visitor with no cookie reads the schedule and finds no actions on it, introduces themselves through the form, and only then books — the booking shows up under their own bookings. `@smoke` |
 
-One scenario is deliberate. It exercises booking, the waitlist and automatic
-promotion in a single story, across the whole path from UI to storage.
-Attendance has no UI, and every other browser-level check would repeat
-something that already fails at a cheaper level.
+Two scenarios, and each answers a question no cheaper level can. E-01 carries
+booking, the waitlist and automatic promotion across the whole path from UI to
+storage, and shows the promotion arriving on somebody else's screen. E-02
+covers the way in: the schedule is public, the form is what turns a visitor
+into a client, and nothing below the browser exercises that.
+
+Attendance has no UI, and anything else we could open a browser for already
+fails at a cheaper level.
 
 ## Manual only
 

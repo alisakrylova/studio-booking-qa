@@ -1,13 +1,10 @@
 import { test as base, expect, request, type APIRequestContext } from '@playwright/test'
 import { z } from 'zod'
 
-const baseURL = `http://localhost:${process.env.PORT ?? 3000}`
+const baseURL = `http://localhost:${process.env.PORT ?? 3100}`
 const studioKey = process.env.STUDIO_KEY ?? 'studio-key-for-tests'
 
-/**
- * Schemas are declared here, not imported from the app: a test that reuses the
- * app's own schema only checks the app against itself.
- */
+/** Declared here, not imported: a schema from the app would check it against itself. */
 export const clientSchema = z.strictObject({
   id: z.string(),
   name: z.string(),
@@ -48,7 +45,6 @@ const errorSchema = z.strictObject({
   }),
 })
 
-/** Every failure goes through here, so each case asserts the envelope as well as the code. */
 export async function expectRefusal(
   response: { status(): number; json(): Promise<unknown> },
   status: number,
@@ -62,10 +58,20 @@ export async function expectRefusal(
 
 export type Client = { api: APIRequestContext; id: string; name: string }
 
+/** Arranging is not the thing under test, so its failures name a likely cause. */
+export async function whyNot(response: { status(): number; text(): Promise<string> }) {
+  const body = await response.text()
+  const hint =
+    response.status() === 401
+      ? ' — do the server and the tests agree on STUDIO_KEY?'
+      : ''
+  return `the arrangement failed with ${response.status()}: ${body}${hint}`
+}
+
 export const inAnHour = () => new Date(Date.now() + 60 * 60 * 1000).toISOString()
 export const anHourAgo = () => new Date(Date.now() - 60 * 60 * 1000).toISOString()
 
-/** Tests share one schedule, so every class carries a title only its test uses. */
+/** Tests share one schedule, so each class carries a title only its test uses. */
 let titles = 0
 export const aTitle = (about: string) => `${about} ${process.pid}-${++titles}`
 
@@ -105,7 +111,7 @@ export const test = base.extend<Fixtures>({
       const response = await api.post('/clients', {
         data: { name, email: `${name.toLowerCase()}@example.com` },
       })
-      expect(response.status()).toBe(201)
+      expect(response.status(), await whyNot(response)).toBe(201)
       const client = clientSchema.parse(await response.json())
 
       return { api, id: client.id, name: client.name }
@@ -127,7 +133,7 @@ export const test = base.extend<Fixtures>({
           capacity: over.capacity ?? 1,
         },
       })
-      expect(response.status()).toBe(201)
+      expect(response.status(), await whyNot(response)).toBe(201)
       return classSchema.parse(await response.json())
     })
   },
