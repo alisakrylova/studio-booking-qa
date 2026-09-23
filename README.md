@@ -1,0 +1,83 @@
+# studio-booking-qa
+
+A small class-booking app for a yoga studio, tested at unit, API and E2E
+levels with Playwright, TypeScript and vitest.
+
+The point of this repository is the test strategy. The app is deliberately
+tiny. The rules were written before any code, and the tests check the rules,
+not the implementation.
+
+- [What the app does](#what-the-app-does)
+- [Rules](#rules)
+- [Rule & where it is tested](#rule--where-it-is-tested)
+- [Out of scope](#out-of-scope)
+
+The detail lives in two documents: **[requirements](docs/requirements.md)**,
+down to status codes and error texts, and **[test cases](docs/test-cases.md)**,
+every case and the level it runs at.
+
+## What the app does
+
+A client opens the class schedule and books a class. If the class is full,
+the client joins the waitlist instead of being turned away. When a booked
+client cancels, the first person on the waitlist gets the seat automatically.
+The studio creates classes and marks who actually came.
+
+Two actors: a **client**, who uses the web UI and manages only their own
+bookings, and the **studio**, which uses the API with a static key and has no
+UI.
+
+## Rules
+
+- **Booking.** A free seat makes a booking `booked`; a full class puts it on
+  the waitlist, first in, first out. A client cannot book the same class
+  twice.
+- **Cancellation.** When a `booked` client cancels, the first waitlisted
+  client is promoted automatically. A waitlisted client who cancels just
+  leaves the queue.
+- **Started classes.** Once a class has started, it cannot be booked or
+  cancelled.
+- **Attendance.** Only a `booked` client can be marked as attended.
+
+```mermaid
+stateDiagram-v2
+    [*] --> booked: seat available
+    [*] --> waitlisted: class full
+    waitlisted --> booked: a booked client cancels
+    booked --> cancelled
+    waitlisted --> cancelled
+    booked --> attended: studio marks attendance
+```
+
+Every edge case — repeated actions, conflicting states, access and validation
+— is spelled out in [the requirements](docs/requirements.md). The tests check
+that document, which is why it exists before the code.
+
+## Rule & where it is tested
+
+Every rule is tested at the lowest level where it can fail. A higher level
+only checks what the lower one cannot see.
+
+| Rule | Unit | API | E2E | Why here |
+|------|:----:|:---:|:---:|----------|
+| Booking and waitlist | ● | ● | ● | Combinations are logic; the API adds status codes; E2E shows the waitlist reaching the client. |
+| Cancellation and promotion | ● | ● | ● | Unit covers the combinations; the API checks the promotion over HTTP; E2E shows it reaching the other client's screen. |
+| Started classes | ● | ● | — | Unit covers the `now == startsAt` boundary; one API test checks it against a real clock. |
+| Attendance | ● | ● | — | No UI for attendance, so the API is the top level. |
+| Access and validation | — | ● | — | Exists only in the HTTP layer. |
+| What the schedule renders | ● | — | — | The render function is pure; a browser would add time, not coverage. |
+
+Both E2E marks are the same single scenario. Cases, counts and automation
+status: **[test cases](docs/test-cases.md)**.
+
+## Out of scope
+
+- No pagination. A studio has only a few classes a day, so the whole schedule
+  is kept in memory and shown as one list.
+- No memberships, payments, notifications, recurring classes, admin roles,
+  password registration.
+- No check against classes in the past. The studio is trusted to enter the times right, which also lets a test create a class that has already started.
+- No endpoints that exist for tests: no `/reset`, no seeding, no `?now=`
+  override. Tests create their own data instead, which is also what lets them
+  run in parallel.
+- The app is not deployed publicly, so it has no rate limiting.
