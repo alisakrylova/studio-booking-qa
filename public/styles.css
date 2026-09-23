@@ -1,0 +1,328 @@
+:root {
+  --ink: #17161c;
+  --ink-soft: #6b6874;
+  --page: #f6f4f1;
+  --card: #fffdfb;
+  --line: #e3ded7;
+  --accent: #3f5d4b;
+  --accent-ink: #fffdfb;
+  --free: #2f6b46;
+  --free-bg: #e4f0e7;
+  --full: #8a5a1a;
+  --full-bg: #f7eddc;
+  --mine: #2b4d73;
+  --mine-bg: #e3ecf6;
+  --radius: 14px;
+
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #f2efe9;
+    --ink-soft: #a29daa;
+    --page: #161519;
+    --card: #1f1e24;
+    --line: #322f39;
+    --accent: #9dc5ab;
+    --accent-ink: #14261b;
+    --free: #9dd5b0;
+    --free-bg: #22322a;
+    --full: #e2b982;
+    --full-bg: #332a1e;
+    --mine: #a9c9ee;
+    --mine-bg: #212c39;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  line-height: 1.55;
+  margin: 0;
+  padding: 3rem 1.25rem 5rem;
+}
+
+main {
+  margin: 0 auto;
+  max-width: 44rem;
+}
+
+h1 {
+  font-size: 2rem;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.tagline {
+  color: var(--ink-soft);
+  margin: 0.35rem 0 2.5rem;
+}
+
+h2 {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  margin: 2.5rem 0 1rem;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* the form people meet first */
+
+#identity {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+  padding: 1.5rem;
+}
+
+#identity h2 {
+  margin-top: 0;
+}
+
+.hint {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  margin: -0.5rem 0 1.25rem;
+}
+
+label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-bottom: 0.3rem;
+}
+
+input {
+  background: var(--page);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: inherit;
+  font: inherit;
+  margin-bottom: 0.9rem;
+  padding: 0.55rem 0.75rem;
+  width: 100%;
+}
+
+input:focus-visible {
+  border-color: var(--accent);
+  outline: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  outline-offset: 1px;
+}
+
+.field-error {
+  color: #b3261e;
+  font-size: 0.82rem;
+  margin: -0.65rem 0 0.9rem;
+}
+
+.field-error:empty {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .field-error {
+    color: #f2b8b5;
+  }
+}
+
+/* buttons */
+
+button {
+  background: var(--accent);
+  border: none;
+  border-radius: 9px;
+  color: var(--accent-ink);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 500;
+  padding: 0.5rem 1.1rem;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  white-space: nowrap;
+}
+
+button:hover:not([disabled]) {
+  opacity: 0.88;
+}
+
+button:active:not([disabled]) {
+  transform: translateY(1px);
+}
+
+button[disabled] {
+  cursor: progress;
+  opacity: 0.45;
+}
+
+.class-card__action {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.class-card__action:hover:not([disabled]) {
+  border-color: var(--accent);
+  color: var(--accent);
+  opacity: 1;
+}
+
+/* the schedule */
+
+.class-list,
+.booking-list {
+  display: grid;
+  gap: 0.75rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.class-card {
+  align-items: center;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 1.1rem 1.35rem;
+}
+
+.class-card.is-started {
+  background: none;
+  border-style: dashed;
+  color: var(--ink-soft);
+}
+
+.class-card__title {
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+.class-card__time {
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+  margin: 0.15rem 0 0;
+}
+
+.class-card__side {
+  align-items: center;
+  display: flex;
+  gap: 0.85rem;
+}
+
+.class-card__state {
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  margin: 0;
+  padding: 0.25rem 0.7rem;
+  white-space: nowrap;
+}
+
+.class-card__state[data-tone='free'] {
+  background: var(--free-bg);
+  color: var(--free);
+}
+
+.class-card__state[data-tone='full'] {
+  background: var(--full-bg);
+  color: var(--full);
+}
+
+.class-card__state[data-tone='booked'],
+.class-card__state[data-tone='waitlisted'],
+.class-card__state[data-tone='attended'] {
+  background: var(--mine-bg);
+  color: var(--mine);
+}
+
+.class-card__state[data-tone='started'] {
+  background: none;
+  border: 1px dashed var(--line);
+  color: var(--ink-soft);
+}
+
+/* my bookings */
+
+.booking {
+  align-items: center;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 0.85rem 1.35rem;
+}
+
+.booking__state {
+  color: var(--mine);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.notice {
+  background: var(--card);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  color: var(--ink-soft);
+  margin: 0;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.notice__action {
+  display: block;
+  margin: 0.75rem auto 0;
+}
+
+/* toasts */
+
+#toasts {
+  bottom: 1.25rem;
+  display: grid;
+  gap: 0.6rem;
+  left: 1.25rem;
+  position: fixed;
+  z-index: 10;
+}
+
+.toast {
+  animation: rise 0.2s ease;
+  background: var(--ink);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.16);
+  color: var(--page);
+  font-size: 0.9rem;
+  max-width: 24rem;
+  padding: 0.7rem 1rem;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@media (max-width: 30rem) {
+  .class-card,
+  .booking {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .class-card__side {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

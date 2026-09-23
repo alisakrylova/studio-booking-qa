@@ -233,7 +233,7 @@ The card shows the client's own state on that class:
 |---|---|---|
 | `me` is `null` | `3 of 8 seats free` or `Full · 2 waiting` | none |
 | No booking, seats free | `3 of 8 seats free` | `Book` |
-| No booking, class full | `Full · 2 waiting` | `Join waitlist` |
+| No booking, class full | `Full · 2 waiting`, or just `Full` when nobody is waiting | `Join waitlist` |
 | Booked | `Booked` | `Cancel` |
 | Waitlisted | `Waitlisted · #2` | `Leave waitlist` |
 | Attended | `Attended` | none |

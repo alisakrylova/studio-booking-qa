@@ -11,6 +11,8 @@ export default defineConfig({
   reporter: [['html', { open: 'never' }], ['list']],
   use: {
     baseURL: `http://localhost:${PORT}`,
+    // SLOW_MO=500 npm run test:e2e -- --headed, when a scenario has to be watched
+    launchOptions: { slowMo: Number(process.env.SLOW_MO ?? 0) },
     trace: 'retain-on-failure',
     video: 'retain-on-failure',
     screenshot: 'only-on-failure',

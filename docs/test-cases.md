@@ -7,11 +7,11 @@ at. The rules it checks are in [the requirements](requirements.md).
 |---|:---:|:---:|
 | [Unit (rules)](#unit-rules) | 22 | 22 |
 | [Unit (validation)](#unit-validation) | 11 | 11 |
-| [Unit (rendering)](#unit-rendering) | 11 | 0 |
+| [Unit (rendering)](#unit-rendering) | 12 | 12 |
 | [API](#api) | 20 | 20 |
-| [E2E](#e2e) | 1 | 0 |
+| [E2E](#e2e) | 1 | 1 |
 | [Manual](#manual-only) | 2 | — |
-| **Total** | **67** | **53** |
+| **Total** | **68** | **66** |
 
 Three cases carry the `@smoke` tag — booking works (A-01), the waitlist
 promotion works (A-05), and a person sees it (E-01) — so that
@@ -80,7 +80,7 @@ displayed correctly" without paying for a browser.
 | R-01 | No classes → the empty-state text, not an empty page |
 | R-02 | `me` is `null` → the schedule renders with seat counts and no action on any card |
 | R-03 | `me` is set and there is no booking → a `Book` button and the seat count |
-| R-04 | Full class → a `Join waitlist` button and the waiting count |
+| R-04 | Full class → a `Join waitlist` button and the waiting count, or just `Full` when nobody waits |
 | R-05 | Own `booked` booking → `Cancel` replaces `Book` |
 | R-06 | Own `waitlisted` booking → the position is shown |
 | R-07 | Started class without a booking → `Started`, dimmed, no action |
@@ -88,6 +88,7 @@ displayed correctly" without paying for a browser.
 | R-09 | Own `attended` booking → `Attended`, no action |
 | R-10 | No bookings → `You have no bookings yet. Pick a class above.`, while the schedule itself still renders |
 | R-11 | The schedule failed to load → the error text and `Retry`, never the empty state |
+| R-12 | A place in the queue carries its number in the bookings list too |
 
 ## API
 
@@ -126,7 +127,7 @@ In `tests/e2e/`.
 
 | ID | Case |
 |---|---|
-| E-01 | One seat. Client A books it, client B joins the waitlist and sees `Waitlisted · #1`. A cancels; B reloads and now reads `Booked`. The two clients run in separate browser contexts. `@smoke` |
+| E-01 | One seat. Client A books it, client B joins the waitlist and sees `Waitlisted · #1`. A cancels — and the seat does not stay free, since B already has it. B reloads and reads `Booked`. The two clients run in separate browser contexts. `@smoke` |
 
 One scenario is deliberate. It exercises booking, the waitlist and automatic
 promotion in a single story, across the whole path from UI to storage.
