@@ -8,10 +8,7 @@ export type Client = {
   phone?: string | undefined
 }
 
-/**
- * Everything lives in memory: a restart is a fresh studio. The layer exists so
- * the rules never see a database, and so swapping one in later is one file.
- */
+/** In memory: a restart is a fresh studio, and a database would be one file. */
 const clients = new Map<string, Client>()
 const tokens = new Map<string, string>()
 const classes = new Map<string, StudioClass>()
@@ -47,7 +44,7 @@ export function createClass(input: { title: string; startsAt: number; capacity: 
 
 export const classById = (id: string) => classes.get(id)
 
-/** Soonest first; classes that start at the same time keep the order they were created in. */
+/** Soonest first; a tie keeps the order the classes were created in. */
 export const allClasses = () =>
   [...classes.values()].sort((a, b) => a.startsAt - b.startsAt)
 
@@ -59,7 +56,6 @@ export const bookingsOfClass = (classId: string) =>
 export const bookingsOfClient = (clientId: string) =>
   [...bookings.values()].filter((b) => b.clientId === clientId)
 
-/** The rules hand back the whole list for a class; storing it is this layer's job. */
 export function saveBookings(next: Booking[]) {
   for (const booking of next) bookings.set(booking.id, booking)
 }

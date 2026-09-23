@@ -1,10 +1,6 @@
 import { z } from 'zod'
 
-/**
- * The order of the validation table in the requirements. A `400` names one
- * field, and when several are invalid it is the first one in this order — per
- * request, because a client and a class have tables of their own.
- */
+/** The order of the validation table in the requirements, one per request. */
 export const CLIENT_FIELDS = ['name', 'email', 'phone'] as const
 export const CLASS_FIELDS = ['title', 'startsAt', 'capacity'] as const
 
@@ -14,12 +10,7 @@ const PHONE_MIN = 5
 const PHONE_MAX = 30
 const TITLE_MAX = 100
 
-/**
- * `local@domain.tld`: exactly one `@`, nothing empty around it, and a dot
- * inside the domain that is neither its first nor its last character. Written
- * out rather than taken from zod, because the requirements are stricter than
- * the library: `a@b` is an address zod accepts and we do not.
- */
+/** Written out rather than taken from zod, which accepts `a@b` and we do not. */
 function looksLikeAnAddress(value: string) {
   const [local, domain, ...rest] = value.split('@')
   if (!local || !domain || rest.length > 0) return false
@@ -38,8 +29,7 @@ export const clientInput = z
   })
   .superRefine((value, ctx) => {
     if (!value.email && !value.phone) {
-      // Stryker disable next-line StringLiteral: zod's own issue code, while
-      // our contract is the field name
+      // Stryker disable next-line StringLiteral: zod's code, our contract is the field
       ctx.addIssue({ code: 'custom', path: ['email'] })
     }
   })
@@ -56,7 +46,6 @@ export type ClassInput = z.infer<typeof classInput>
 export type Valid<T> = { ok: true; value: T }
 export type Invalid = { ok: false; field: string }
 
-/** Unknown fields are dropped on the way in; they do not make a body invalid. */
 export const validateClient = (body: unknown) =>
   validate(clientInput, body, CLIENT_FIELDS)
 
@@ -74,12 +63,7 @@ function validate<T>(
   return { ok: false, field: firstFieldOf(parsed.error.issues, fields) }
 }
 
-/**
- * Which field a `400` names when several are invalid: the first one in the
- * table, whatever order the failures arrive in. A body that is not an object
- * at all names no field, so it falls back to the first of the table — there is
- * nothing more specific to say.
- */
+/** The first field of the table, whatever order the failures arrive in. */
 export function firstInvalidField(
   failed: readonly string[],
   fields: readonly string[],
@@ -93,8 +77,7 @@ export function firstInvalidField(
 }
 
 function firstFieldOf(issues: readonly z.core.$ZodIssue[], fields: readonly string[]) {
-  // Stryker disable next-line StringLiteral: an issue with no path is outside
-  // the table either way, so any replacement behaves the same
+  // Stryker disable next-line StringLiteral: a pathless issue is outside the table anyway
   const failed = issues.map((issue) => String(issue.path[0] ?? ''))
   return firstInvalidField(failed, fields)
 }

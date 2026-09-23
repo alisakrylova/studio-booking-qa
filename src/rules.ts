@@ -33,7 +33,6 @@ export const isActive = (booking: Booking) => ACTIVE.includes(booking.status)
 export const hasStarted = (studioClass: StudioClass, now: number) =>
   now >= studioClass.startsAt
 
-/** A seat is held by a booked client and by one already marked as attended. */
 export function seatsFree(studioClass: StudioClass, bookings: Booking[]) {
   const taken = bookings.filter(
     (b) => b.status === 'booked' || b.status === 'attended',
@@ -41,24 +40,18 @@ export function seatsFree(studioClass: StudioClass, bookings: Booking[]) {
   return studioClass.capacity - taken
 }
 
-/** The waitlist, first in first out. */
 export function waitlist(bookings: Booking[]) {
   return bookings
     .filter((b) => b.status === 'waitlisted')
     .sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id))
 }
 
-/** A number while the booking waits, null otherwise — including once it is booked. */
 export function positionOf(booking: Booking, bookings: Booking[]) {
   const index = waitlist(bookings).findIndex((b) => b.id === booking.id)
   return index === -1 ? null : index + 1
 }
 
-/**
- * Rule 1. A free seat books the client, a full class puts them on the
- * waitlist. An active booking of their own blocks a second one — and that
- * answer comes before the one about the class, as the requirements say.
- */
+/** Rule 1. A booking of your own is answered before the state of the class. */
 export function book(
   studioClass: StudioClass,
   bookings: Booking[],
@@ -79,12 +72,7 @@ export function book(
   return ok({ bookings: [...bookings, booking], booking })
 }
 
-/**
- * Rule 2. The booking comes in as an object: a caller that cannot find it
- * answers 404 long before the rules are consulted. Cancelling a seat frees it and promotes whoever is first in the
- * queue. Cancelling twice changes nothing — that check comes before the
- * rules, so it holds even once the class has started.
- */
+/** Rule 2. A repeat is answered before the rules, so it holds after the start too. */
 export function cancel(
   studioClass: StudioClass,
   bookings: Booking[],
@@ -107,10 +95,6 @@ export function cancel(
   return ok({ bookings: next, changed: true, promotedId: promoted?.id ?? null })
 }
 
-/**
- * Rule 4. Only a booked client can be marked as attended, at any time.
- * Marking twice changes nothing.
- */
 export function attend(
   bookings: Booking[],
   booking: Booking,

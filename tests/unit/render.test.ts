@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 import { describe, expect, test } from 'vitest'
-// the page is plain JavaScript, served exactly as it is written
 import { renderMyBookings, renderSchedule } from '../../public/render.js'
 
 const NOW = Date.UTC(2026, 0, 1, 9, 0)

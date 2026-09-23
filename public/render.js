@@ -1,8 +1,4 @@
-/**
- * Drawing the schedule, as a pure function of what `GET /classes` answered.
- * Nothing here fetches, stores or decides: a card offers an action only when
- * the action would mean something, and the API refuses it anyway.
- */
+/** Drawing the schedule, as a pure function of what `GET /classes` answered. */
 
 const element = (tag, className, text) => {
   const node = document.createElement(tag)
@@ -22,7 +18,6 @@ const at = (startsAt) =>
 
 const hasStarted = (studioClass, now) => now >= Date.parse(studioClass.startsAt)
 
-/** What the card says about the reader's place on this class. */
 function situation(studioClass, started) {
   const mine = studioClass.myBooking
 
@@ -39,7 +34,6 @@ function situation(studioClass, started) {
     }
   }
 
-  // A seat count is only worth reading while the class can still be joined.
   if (started) return { text: '', tone: 'started' }
 
   if (studioClass.seatsFree > 0) {
@@ -97,11 +91,7 @@ function card(studioClass, canAct, now) {
   return node
 }
 
-/**
- * `state` is either what the schedule request answered, or `{ ok: false }`
- * when it did not answer at all — an empty schedule and a failed one must not
- * look alike.
- */
+/** `{ ok: false }` when the request did not answer: that must not look empty. */
 export function renderSchedule(state, now = Date.now()) {
   const root = element('div', 'schedule')
 
@@ -126,7 +116,6 @@ export function renderSchedule(state, now = Date.now()) {
   return root
 }
 
-/** The client's own bookings, under the schedule. */
 export function renderMyBookings(items) {
   const root = element('div', 'my-bookings')
 

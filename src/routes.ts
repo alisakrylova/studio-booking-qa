@@ -15,10 +15,7 @@ import {
 import { bookingView, classView, clientView, myBookingsView, rosterView } from './views.ts'
 import { validateClass, validateClient } from './validation.ts'
 
-/**
- * Handlers stay thin and follow the order of checks from the requirements:
- * credentials, actor, body, resource, owner, repeat, rule.
- */
+/** Thin handlers, in the order of checks from the requirements. */
 export const routes = Router()
 
 const valid = <T>(result: { ok: true; value: T } | { ok: false; field: string }) => {

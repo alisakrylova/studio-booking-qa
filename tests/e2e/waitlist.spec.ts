@@ -14,7 +14,10 @@ test('E-01 a cancelled seat reaches the first person waiting for it @smoke', asy
         capacity: 1,
       },
     })
-    expect(response.status()).toBe(201)
+    expect(
+      response.status(),
+      `the studio could not open a class: ${await response.text()} — do the server and the tests agree on STUDIO_KEY?`,
+    ).toBe(201)
   })
 
   const anna = await as('Anna')

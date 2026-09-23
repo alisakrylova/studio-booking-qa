@@ -72,8 +72,7 @@ describe('client fields', () => {
       ok: false,
       field: 'email',
     })
-    // "at least one of the two" sits below phone in the table, so a phone that
-    // is invalid on its own is named before the missing contact
+    // "at least one of the two" sits below phone in the table
     expect(client({ email: undefined, phone: chars(4) })).toEqual({
       ok: false,
       field: 'phone',
@@ -84,8 +83,7 @@ describe('client fields', () => {
     })
   })
 
-  // zod happens to report failures in the order the fields are declared, so
-  // this rule cannot be observed through validateClient alone
+  // zod reports failures in declaration order, so this is unobservable above
   test('V-11 the field named is the first in the table, whatever order failures arrive in', () => {
     expect(firstInvalidField(['phone', 'email'], CLIENT_FIELDS)).toBe('email')
     expect(firstInvalidField(['phone'], CLIENT_FIELDS)).toBe('phone')

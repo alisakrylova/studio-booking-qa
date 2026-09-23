@@ -19,7 +19,6 @@ export const bookingView = (booking: Booking, siblings: Booking[]) => ({
   createdAt: asTime(booking.createdAt),
 })
 
-/** What a schedule card is drawn from, including the reader's own booking. */
 export function classView(
   studioClass: StudioClass,
   viewerId: string | null,
@@ -42,7 +41,7 @@ export function classView(
   }
 }
 
-/** The studio's roster: the room first, then the queue, each with the person. */
+/** The room first, then the queue. */
 export function rosterView(studioClass: StudioClass) {
   const siblings = bookingsOfClass(studioClass.id)
   const inTheRoom = siblings
@@ -55,7 +54,6 @@ export function rosterView(studioClass: StudioClass) {
   }))
 }
 
-/** A client's own bookings, each carrying the class it belongs to. */
 export const myBookingsView = (own: Booking[]) =>
   own
     .filter((booking) => booking.status !== 'cancelled')
