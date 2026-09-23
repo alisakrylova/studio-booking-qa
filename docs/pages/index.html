@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>studio-booking-qa — test reports</title>
+    <style>
+      :root { color-scheme: light dark; --ink: #17161c; --soft: #6b6874; --page: #f6f4f1; --card: #fffdfb; --line: #e3ded7; }
+      @media (prefers-color-scheme: dark) {
+        :root { --ink: #f2efe9; --soft: #a29daa; --page: #161519; --card: #1f1e24; --line: #322f39; }
+      }
+      * { box-sizing: border-box; }
+      body {
+        background: var(--page); color: var(--ink); margin: 0; padding: 4rem 1.25rem;
+        font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif; line-height: 1.55;
+      }
+      main { margin: 0 auto; max-width: 36rem; }
+      h1 { font-size: 1.8rem; letter-spacing: -0.02em; margin: 0; }
+      p { color: var(--soft); }
+      ul { display: grid; gap: 0.75rem; list-style: none; margin: 2.5rem 0 0; padding: 0; }
+      a.card {
+        background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+        color: inherit; display: block; padding: 1rem 1.25rem; text-decoration: none;
+      }
+      a.card:hover { border-color: var(--soft); }
+      a.card strong { display: block; }
+      a.card span { color: var(--soft); font-size: 0.9rem; }
+      footer { color: var(--soft); font-size: 0.85rem; margin-top: 3rem; }
+      code { font-size: 0.85rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>studio-booking-qa</h1>
+      <p>
+        A small class-booking app tested at unit, API and E2E levels. These are
+        the reports of the last run on <code>main</code>.
+      </p>
+
+      <ul>
+        <li>
+          <a class="card" href="playwright/">
+            <strong>Playwright report</strong>
+            <span>API and browser cases, with the steps each one took</span>
+          </a>
+        </li>
+        <li>
+          <a class="card" href="mutation/">
+            <strong>Mutation report</strong>
+            <span>What the unit tests would fail to notice, rule by rule</span>
+          </a>
+        </li>
+        <li>
+          <a class="card" href="https://github.com/alisakrylova/studio-booking-qa">
+            <strong>The repository</strong>
+            <span>The rules, the case list, and why each case sits where it does</span>
+          </a>
+        </li>
+      </ul>
+
+      <footer>Built from <code>COMMIT_SHA</code> on BUILT_AT.</footer>
+    </main>
+  </body>
+</html>
