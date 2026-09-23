@@ -11,6 +11,7 @@ not the implementation.
 - [Rules](#rules)
 - [Rule & where it is tested](#rule--where-it-is-tested)
 - [Running it](#running-it)
+- [What a failure looks like](#what-a-failure-looks-like)
 - [Out of scope](#out-of-scope)
 
 The detail lives in two documents: **[requirements](docs/requirements.md)**,
@@ -103,6 +104,26 @@ npm run report        # the last Playwright run, as a page
 
 Playwright starts the app itself on a port of its own, so tests never meet a
 server left running on 3000.
+
+## What a failure looks like
+
+Every picture below comes from a real run with a rule broken on purpose.
+
+In a browser the steps say where the story stopped: the booking and the
+waitlist held, and the consequence did not.
+
+![The step tree of a failing scenario](docs/images/failure-steps.png)
+
+The message says what was expected and what the page showed instead — Anna's
+card offered a free seat, because the seat never reached Bea.
+
+![The assertion that failed](docs/images/failure-message.png)
+
+At the API level the subject is the contract rather than a story, so a failure
+names the field, prints the body that came instead, and points at the line
+that asked for it.
+
+![An API response that broke the contract](docs/images/api-failure.png)
 
 ## Out of scope
 
