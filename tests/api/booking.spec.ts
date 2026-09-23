@@ -31,6 +31,10 @@ test('A-02 a full class puts the next client on the waitlist', async ({
     status: 'waitlisted',
     position: 1,
   })
+
+  const schedule = await (await second.api.get('/classes')).json()
+  const seen = schedule.items.find((item: { id: string }) => item.id === studioClass.id)
+  expect(seen).toMatchObject({ seatsFree: 0, waitlistCount: 1 })
 })
 
 test('A-03 booking the same class twice', async ({ client, newClass }) => {

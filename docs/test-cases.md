@@ -8,10 +8,10 @@ at. The rules it checks are in [the requirements](requirements.md).
 | [Unit (rules)](#unit-rules) | 22 | 22 |
 | [Unit (validation)](#unit-validation) | 11 | 11 |
 | [Unit (rendering)](#unit-rendering) | 12 | 12 |
-| [API](#api) | 20 | 20 |
+| [API](#api) | 21 | 21 |
 | [E2E](#e2e) | 2 | 2 |
 | [Manual](#manual-only) | 2 | — |
-| **Total** | **69** | **67** |
+| **Total** | **70** | **68** |
 
 Four cases carry the `@smoke` tag — a visitor can become a client (E-02),
 booking works (A-01), the waitlist promotion works (A-05), and a person sees it
@@ -101,7 +101,7 @@ against itself. Errors go through one shared helper that validates the whole
 | ID | Case | Expected |
 |---|---|---|
 | A-01 | Book a class with a free seat `@smoke` | `201`, status `booked`, body matches the schema |
-| A-02 | Book a full class | `201`, status `waitlisted` — not an error |
+| A-02 | Book a full class | `201`, status `waitlisted` — not an error — and the schedule then reads `seatsFree: 0` with `waitlistCount: 1` |
 | A-03 | Book the same class twice | `409 already_booked` |
 | A-04 | Book a class that already started | `409 class_started` |
 | A-05 | Cancel a `booked` booking while someone is waiting `@smoke` | `200` with the booking back as `cancelled`, and the class roster shows the first waiting client as `booked` |
@@ -120,6 +120,7 @@ against itself. Errors go through one shared helper that validates the whole
 | A-18 | `GET /me/bookings` after booking one class and cancelling another, while a second client also has bookings | `200`, only this client's active bookings — the cancelled one is gone — each with its `class` nested and a `position` only when `waitlisted` |
 | A-19 | `POST /clients` sets the session cookie | `Set-Cookie` for `token` carries `HttpOnly`, `SameSite=Strict`, `Path=/` and a 30-day `Max-Age`, and the token is not in the body |
 | A-20 | Call a studio endpoint with a wrong `X-Studio-Key` | `401 unauthenticated`, not `403` — an unknown key is nobody |
+| A-21 | The first of two waiting clients leaves the queue | `200` with the booking `cancelled`, the person in the room untouched, the one behind moved to position 1, and `waitlistCount` down to 1 |
 
 ## E2E
 
