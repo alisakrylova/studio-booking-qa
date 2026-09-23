@@ -10,6 +10,7 @@ not the implementation.
 - [What the app does](#what-the-app-does)
 - [Rules](#rules)
 - [Rule & where it is tested](#rule--where-it-is-tested)
+- [Running it](#running-it)
 - [Out of scope](#out-of-scope)
 
 The detail lives in two documents: **[requirements](docs/requirements.md)**,
@@ -67,9 +68,41 @@ only checks what the lower one cannot see.
 | Validation | ● | ● | — | The boundaries are a pure function; two API tests show a route calls it, and rejects before doing any work. |
 | Access | — | ● | — | Exists only in the HTTP layer. |
 | What the schedule renders | ● | — | — | The render function is pure; a browser would add time, not coverage. |
+| Becoming a client | — | ● | ● | The API checks the cookie it hands out; only a browser can show that the form turns a visitor into someone who can book. |
 
-Both E2E marks are the same single scenario. Cases, counts and automation
-status: **[test cases](docs/test-cases.md)**.
+Two E2E scenarios carry all four marks: one for the waitlist, one for the way
+in. Cases, counts and automation status: **[test cases](docs/test-cases.md)**.
+
+## Running it
+
+```bash
+npm install
+npx playwright install chromium
+
+STUDIO_KEY=k npm start        # http://localhost:3000
+```
+
+The schedule is empty until the studio puts something in it, and the studio
+has no screen of its own:
+
+```bash
+curl -X POST localhost:3000/classes \
+  -H 'content-type: application/json' -H 'x-studio-key: k' \
+  -d '{"title":"Morning flow","startsAt":"2030-01-01T10:00:00Z","capacity":1}'
+```
+
+```bash
+npm test              # every level, in order
+npm run test:unit     # rules, validation, rendering — no browser, no server
+npm run test:api      # the HTTP contract
+npm run test:e2e      # two scenarios in a browser
+npm run test:smoke    # the four cases that say whether the rest is worth running
+npm run test:mutation # what the unit tests would fail to notice
+npm run report        # the last Playwright run, as a page
+```
+
+Playwright starts the app itself on a port of its own, so tests never meet a
+server left running on 3000.
 
 ## Out of scope
 
