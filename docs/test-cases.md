@@ -5,13 +5,13 @@ at. The rules it checks are in [the requirements](requirements.md).
 
 | Level | Cases | Automated |
 |---|:---:|:---:|
-| [Unit (rules)](#unit-rules) | 21 | 0 |
+| [Unit (rules)](#unit-rules) | 22 | 22 |
 | [Unit (validation)](#unit-validation) | 7 | 0 |
 | [Unit (rendering)](#unit-rendering) | 11 | 0 |
 | [API](#api) | 20 | 0 |
 | [E2E](#e2e) | 1 | 0 |
 | [Manual](#manual-only) | 2 | — |
-| **Total** | **62** | **0** |
+| **Total** | **63** | **22** |
 
 Three cases carry the `@smoke` tag — booking works (A-01), the waitlist
 promotion works (A-05), and a person sees it (E-01) — so that
@@ -26,7 +26,7 @@ clock.
 
 | ID | Rule | Case |
 |---|---|---|
-| U-01 | Booking | A free seat makes the booking `booked` |
+| U-01 | Booking | A free seat makes the booking `booked`, with no place in the queue |
 | U-02 | Booking | A full class makes it `waitlisted` at position 1 |
 | U-03 | Booking | Booking again while `booked` or `waitlisted` is rejected |
 | U-04 | Booking | Booking again after cancelling, on a class that is full with someone already waiting, creates a new booking at the end of the waitlist |
@@ -39,7 +39,7 @@ clock.
 | U-11 | Cancellation | Cancelling twice is a no-op, even after the class started |
 | U-12 | Started classes | `now == startsAt` → booking is rejected |
 | U-13 | Started classes | One millisecond before `startsAt` → booking is accepted |
-| U-14 | Attendance | A `booked` booking becomes `attended` |
+| U-14 | Attendance | A `booked` booking becomes `attended`, and the other bookings are left alone |
 | U-15 | Attendance | Marking a `waitlisted` booking is rejected |
 | U-16 | Attendance | Marking a `cancelled` booking is rejected |
 | U-17 | Attendance | Marking twice is a no-op |
@@ -47,6 +47,7 @@ clock.
 | U-19 | Attendance | A class whose only seat is held by an `attended` booking is full: the next client is `waitlisted` |
 | U-20 | Cancellation | Cancelling an `attended` booking on a started class answers `not_cancellable`, not `class_started` |
 | U-21 | Booking | Booking a started class while holding an active booking answers `already_booked`, not `class_started` |
+| U-22 | Cancellation | The queue follows the time each client joined, not the order the bookings arrive in: the earliest waiting client is at position 1 and is the one promoted |
 
 ## Unit (validation)
 
