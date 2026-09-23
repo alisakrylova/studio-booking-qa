@@ -58,6 +58,20 @@ export async function expectRefusal(
 
 export type Client = { api: APIRequestContext; id: string; name: string }
 
+/**
+ * A response that does not match the contract says so in words, and shows what
+ * came instead — a raw ZodError names neither the thing nor the test's part in it.
+ */
+export function matching<T>(schema: z.ZodType<T>, body: unknown, what: string): T {
+  const parsed = schema.safeParse(body)
+  if (parsed.success) return parsed.data
+
+  throw new Error(
+    `the ${what} does not match the contract:\n${z.prettifyError(parsed.error)}\n` +
+      `what came instead: ${JSON.stringify(body)}`,
+  )
+}
+
 /** Arranging is not the thing under test, so its failures name a likely cause. */
 export async function whyNot(response: { status(): number; text(): Promise<string> }) {
   const body = await response.text()
@@ -112,7 +126,7 @@ export const test = base.extend<Fixtures>({
         data: { name, email: `${name.toLowerCase()}@example.com` },
       })
       expect(response.status(), await whyNot(response)).toBe(201)
-      const client = clientSchema.parse(await response.json())
+      const client = matchingClient(await response.json(), 'client we arranged')
 
       return { api, id: client.id, name: client.name }
     })
@@ -134,9 +148,16 @@ export const test = base.extend<Fixtures>({
         },
       })
       expect(response.status(), await whyNot(response)).toBe(201)
-      return classSchema.parse(await response.json())
+      return matchingClass(await response.json(), 'class we arranged')
     })
   },
 })
+
+export const matchingBooking = (body: unknown, what = 'booking') =>
+  matching(bookingSchema, body, what)
+export const matchingClass = (body: unknown, what = 'class') =>
+  matching(classSchema, body, what)
+export const matchingClient = (body: unknown, what = 'client') =>
+  matching(clientSchema, body, what)
 
 export { expect, request }

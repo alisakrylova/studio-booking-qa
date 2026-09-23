@@ -1,4 +1,4 @@
-import { bookingSchema, expect, expectRefusal, test } from './fixtures.ts'
+import { expect, expectRefusal, matchingBooking, test } from './fixtures.ts'
 
 test('A-07 marking someone who is only on the waitlist', async ({
   client,
@@ -9,7 +9,7 @@ test('A-07 marking someone who is only on the waitlist', async ({
   const studioClass = await newClass({ capacity: 1 })
   await client.api.post(`/classes/${studioClass.id}/bookings`)
   const second = await newClient('Bea')
-  const queued = bookingSchema.parse(
+  const queued = matchingBooking(
     await (await second.api.post(`/classes/${studioClass.id}/bookings`)).json(),
   )
 
@@ -24,7 +24,7 @@ test('A-08 marking attendance twice changes nothing', async ({
   studio,
 }) => {
   const studioClass = await newClass({ capacity: 1 })
-  const booking = bookingSchema.parse(
+  const booking = matchingBooking(
     await (await client.api.post(`/classes/${studioClass.id}/bookings`)).json(),
   )
 
@@ -34,5 +34,5 @@ test('A-08 marking attendance twice changes nothing', async ({
   expect(first.status()).toBe(200)
   expect(again.status()).toBe(200)
   expect(await again.json()).toEqual(await first.json())
-  expect(bookingSchema.parse(await again.json())).toMatchObject({ status: 'attended' })
+  expect(matchingBooking(await again.json())).toMatchObject({ status: 'attended' })
 })

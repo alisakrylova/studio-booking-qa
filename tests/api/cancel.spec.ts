@@ -1,4 +1,10 @@
-import { bookingSchema, expect, expectRefusal, test, type Client } from './fixtures.ts'
+import {
+  expect,
+  expectRefusal,
+  matchingBooking,
+  test,
+  type Client,
+} from './fixtures.ts'
 
 test('A-05 cancelling frees the seat and the first in the queue takes it @smoke', async ({
   client,
@@ -10,10 +16,10 @@ test('A-05 cancelling frees the seat and the first in the queue takes it @smoke'
   const second = await newClient('Bea')
 
   const { seat, queued } = await test.step('one seat, Anna in it and Bea waiting', async () => {
-    const seat = bookingSchema.parse(
+    const seat = matchingBooking(
       await (await client.api.post(`/classes/${studioClass.id}/bookings`)).json(),
     )
-    const queued = bookingSchema.parse(
+    const queued = matchingBooking(
       await (await second.api.post(`/classes/${studioClass.id}/bookings`)).json(),
     )
     expect(queued.status).toBe('waitlisted')
@@ -24,7 +30,7 @@ test('A-05 cancelling frees the seat and the first in the queue takes it @smoke'
     const response = await client.api.post(`/bookings/${seat.id}/cancel`)
 
     expect(response.status()).toBe(200)
-    expect(bookingSchema.parse(await response.json())).toMatchObject({
+    expect(matchingBooking(await response.json())).toMatchObject({
       id: seat.id,
       status: 'cancelled',
     })
@@ -44,7 +50,7 @@ test('A-06 cancelling a booking the studio has marked as attended', async ({
   studio,
 }) => {
   const studioClass = await newClass({ capacity: 1 })
-  const booking = bookingSchema.parse(
+  const booking = matchingBooking(
     await (await client.api.post(`/classes/${studioClass.id}/bookings`)).json(),
   )
   await studio.post(`/bookings/${booking.id}/attend`)
@@ -65,7 +71,7 @@ test('A-21 leaving the queue moves the people behind, and nobody into the room',
   const cleo = await newClient('Cleo')
 
   const bookAs = async (who: Client) =>
-    bookingSchema.parse(
+    matchingBooking(
       await (await who.api.post(`/classes/${studioClass.id}/bookings`)).json(),
     )
 
@@ -77,7 +83,7 @@ test('A-21 leaving the queue moves the people behind, and nobody into the room',
   const response = await bea.api.post(`/bookings/${leaving.id}/cancel`)
 
   expect(response.status()).toBe(200)
-  expect(bookingSchema.parse(await response.json())).toMatchObject({
+  expect(matchingBooking(await response.json())).toMatchObject({
     id: leaving.id,
     status: 'cancelled',
     position: null,

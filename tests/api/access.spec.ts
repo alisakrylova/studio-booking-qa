@@ -1,4 +1,4 @@
-import { bookingSchema, expectRefusal, test } from './fixtures.ts'
+import { expectRefusal, matchingBooking, test } from './fixtures.ts'
 
 test('A-11 booking without credentials', async ({ stranger, newClass }) => {
   const studioClass = await newClass()
@@ -22,7 +22,7 @@ test('A-13 cancelling a booking that belongs to someone else', async ({
   newClass,
 }) => {
   const studioClass = await newClass({ capacity: 2 })
-  const booking = bookingSchema.parse(
+  const booking = matchingBooking(
     await (await client.api.post(`/classes/${studioClass.id}/bookings`)).json(),
   )
   const second = await newClient('Bea')

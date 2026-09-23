@@ -1,11 +1,11 @@
 import {
-  anHourAgo,
   aTitle,
-  bookingSchema,
-  classSchema,
-  clientSchema,
+  anHourAgo,
   expect,
   inAnHour,
+  matchingBooking,
+  matchingClass,
+  matchingClient,
   request,
   test,
 } from './fixtures.ts'
@@ -32,7 +32,7 @@ test('A-16 the schedule comes back soonest first, started classes included', asy
   await test.step('the schedule sorts them by their start, started one included', async () => {
     const schedule = await (await stranger.get('/classes')).json()
     const mine = schedule.items
-      .map((item: unknown) => classSchema.parse(item))
+      .map((item: unknown) => matchingClass(item))
       .filter((item: { title: string }) => item.title.startsWith(label))
 
     expect(mine.map((item: { id: string }) => item.id)).toEqual([
@@ -51,7 +51,7 @@ test('A-17 myBooking belongs to whoever is asking', async ({
   studio,
 }) => {
   const studioClass = await newClass({ capacity: 1 })
-  const booking = bookingSchema.parse(
+  const booking = matchingBooking(
     await (await client.api.post(`/classes/${studioClass.id}/bookings`)).json(),
   )
 
@@ -108,7 +108,7 @@ test('A-18 a client sees their own active bookings, with the class on each', asy
 
     await client.api.post(`/classes/${free.id}/bookings`)
     await client.api.post(`/classes/${taken.id}/bookings`)
-    const dropped = bookingSchema.parse(
+    const dropped = matchingBooking(
       await (await client.api.post(`/classes/${leaving.id}/bookings`)).json(),
     )
     await client.api.post(`/bookings/${dropped.id}/cancel`)
@@ -147,5 +147,5 @@ test('A-19 the session cookie is the only place the token appears', async ({ str
   const token = cookie.split('=')[1]!.split(';')[0]!
   const raw = await response.text()
   expect(raw).not.toContain(token)
-  clientSchema.parse(JSON.parse(raw))
+  matchingClient(JSON.parse(raw))
 })

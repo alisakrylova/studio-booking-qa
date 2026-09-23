@@ -94,9 +94,12 @@ displayed correctly" without paying for a browser.
 
 In `tests/api/`. Response schemas are declared in the tests with zod, not
 imported from the app: a test that reuses the app's own schema checks the app
-against itself. Errors go through one shared helper that validates the whole
-`{error:{code,message,field}}` envelope, so every case below that expects a
-`4xx` asserts the envelope as well as the code.
+against itself. Bodies go through helpers rather than raw schema parsing, so a
+response that breaks the contract names the field and shows what came instead,
+and a failure while arranging a test says as much. Errors go through a helper
+of the same kind, which validates the whole `{error:{code,message,field}}`
+envelope, so every case that expects a `4xx` asserts the envelope as well as
+the code.
 
 | ID | Case | Expected |
 |---|---|---|
