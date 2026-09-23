@@ -62,14 +62,22 @@ export type Client = { api: APIRequestContext; id: string; name: string }
  * A response that does not match the contract says so in words, and shows what
  * came instead — a raw ZodError names neither the thing nor the test's part in it.
  */
-export function matching<T>(schema: z.ZodType<T>, body: unknown, what: string): T {
+export function matching<T>(
+  schema: z.ZodType<T>,
+  body: unknown,
+  what: string,
+  askedBy: (...args: never[]) => unknown = matching,
+): T {
   const parsed = schema.safeParse(body)
   if (parsed.success) return parsed.data
 
-  throw new Error(
+  const failure = new Error(
     `the ${what} does not match the contract:\n${z.prettifyError(parsed.error)}\n` +
-      `what came instead: ${JSON.stringify(body)}`,
+      `what came instead:\n${JSON.stringify(body, null, 2)}`,
   )
+  // point at the line that asked, not at this helper
+  Error.captureStackTrace(failure, askedBy)
+  throw failure
 }
 
 /** Arranging is not the thing under test, so its failures name a likely cause. */
@@ -154,10 +162,10 @@ export const test = base.extend<Fixtures>({
 })
 
 export const matchingBooking = (body: unknown, what = 'booking') =>
-  matching(bookingSchema, body, what)
+  matching(bookingSchema, body, what, matchingBooking)
 export const matchingClass = (body: unknown, what = 'class') =>
-  matching(classSchema, body, what)
+  matching(classSchema, body, what, matchingClass)
 export const matchingClient = (body: unknown, what = 'client') =>
-  matching(clientSchema, body, what)
+  matching(clientSchema, body, what, matchingClient)
 
 export { expect, request }
