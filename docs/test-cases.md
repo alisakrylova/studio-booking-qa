@@ -6,12 +6,12 @@ at. The rules it checks are in [the requirements](requirements.md).
 | Level | Cases | Automated |
 |---|:---:|:---:|
 | [Unit (rules)](#unit-rules) | 22 | 22 |
-| [Unit (validation)](#unit-validation) | 7 | 0 |
+| [Unit (validation)](#unit-validation) | 11 | 11 |
 | [Unit (rendering)](#unit-rendering) | 11 | 0 |
 | [API](#api) | 20 | 0 |
 | [E2E](#e2e) | 1 | 0 |
 | [Manual](#manual-only) | 2 | — |
-| **Total** | **63** | **22** |
+| **Total** | **67** | **33** |
 
 Three cases carry the `@smoke` tag — booking works (A-01), the waitlist
 promotion works (A-05), and a person sees it (E-01) — so that
@@ -59,11 +59,15 @@ two cases that show a route actually calls it.
 |---|---|
 | V-01 | `name`: 1 and 100 characters accepted, empty and 101 rejected |
 | V-02 | `email`: 255 characters accepted, 256 rejected, both well-formed addresses |
-| V-03 | `email`: `a@b`, `a@b.` and `a@.b` rejected, `a@b.co` accepted |
+| V-03 | `email`: `a@b`, `a@b.`, `a@.b`, `@example.com` and an address with a second `@` rejected, `a@b.co` accepted |
 | V-04 | `phone`: 5 and 30 characters accepted, 4 and 31 rejected |
 | V-05 | Neither email nor phone → rejected naming `email`; either one alone is enough |
 | V-06 | Two invalid fields → `field` names the first one in the order of the validation table |
-| V-07 | `capacity`: 1 accepted, 0 and a fractional number rejected; `startsAt` outside ISO 8601 rejected |
+| V-07 | `capacity`: 1 accepted, 0 and a fractional number rejected; `startsAt` rejected when it is not ISO 8601 in UTC, an offset form included |
+| V-08 | An unknown field is dropped rather than rejected, and does not reach the value |
+| V-09 | A class in the past is accepted: the studio is trusted with the time |
+| V-10 | A body that is not an object at all is rejected, naming the first field of that table |
+| V-11 | The field named is the first one in the table whatever order the failures arrive in, and a failure outside the table falls back to the first field |
 
 ## Unit (rendering)
 

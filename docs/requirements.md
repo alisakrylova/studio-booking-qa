@@ -116,11 +116,13 @@ booking after the class has started is still a no-op, not a `409`.
 | `phone` | Optional, 5–30 characters |
 | `email` / `phone` | At least one of the two is required. If both are missing, `field` is `email` |
 | `title` | Required, 1–100 characters |
-| `startsAt` | Required, ISO 8601. Any point in time, including the past |
+| `startsAt` | Required, ISO 8601 in UTC (`2026-01-01T10:00:00Z`); an offset form is rejected. Any point in time, including the past |
 | `capacity` | Required, an integer, at least 1 |
 
 A `400` names a single `field`. When more than one field is invalid, it is the
-first one in the order of the table above.
+first one in the order of the table above — client fields and class fields are
+separate tables, so a class names one of its own. A body that is not an object
+at all is invalid too, and names the first field of that table.
 
 ## Order of checks
 

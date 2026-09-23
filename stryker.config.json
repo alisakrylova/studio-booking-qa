@@ -11,7 +11,8 @@
     "fileName": "mutation-report/index.html"
   },
   "mutate": [
-    "src/rules.ts"
+    "src/rules.ts",
+    "src/validation.ts"
   ],
   "coverageAnalysis": "perTest",
   "thresholds": {
