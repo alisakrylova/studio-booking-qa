@@ -8,10 +8,10 @@ at. The rules it checks are in [the requirements](requirements.md).
 | [Unit (rules)](#unit-rules) | 22 | 22 |
 | [Unit (validation)](#unit-validation) | 11 | 11 |
 | [Unit (rendering)](#unit-rendering) | 11 | 0 |
-| [API](#api) | 20 | 0 |
+| [API](#api) | 20 | 20 |
 | [E2E](#e2e) | 1 | 0 |
 | [Manual](#manual-only) | 2 | — |
-| **Total** | **67** | **33** |
+| **Total** | **67** | **53** |
 
 Three cases carry the `@smoke` tag — booking works (A-01), the waitlist
 promotion works (A-05), and a person sees it (E-01) — so that

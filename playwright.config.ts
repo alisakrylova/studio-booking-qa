@@ -11,7 +11,7 @@ export default defineConfig({
   reporter: [['html', { open: 'never' }], ['list']],
   use: {
     baseURL: `http://localhost:${PORT}`,
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure',
     video: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
