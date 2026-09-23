@@ -20,11 +20,15 @@ it. So anything a test relies on must be written here first.
 | Credential | A random token from `POST /clients` | `STUDIO_KEY`, from the environment |
 | Sent as | `token` cookie, `HttpOnly`, `SameSite=Strict` | `X-Studio-Key` header |
 
-Every endpoint requires one actor or the other. `GET /classes` accepts both.
+Every endpoint requires one actor or the other, except two that are open:
+`POST /clients`, where a client gets its credential in the first place, and
+`GET /classes` — a studio's schedule is public, and people decide whether to
+identify themselves after they have seen it.
 
-There are no passwords and no login: the cookie is the identity. Email is not
-unique, and there is no account recovery — a cleared browser or a server
-restart loses those bookings.
+There are no passwords and no login: the cookie is the identity. It carries a
+`Max-Age` of 30 days at `Path=/`, so a returning visitor still has their
+bookings. Email is not unique, and there is no account recovery — a cleared
+browser, another device or a server restart loses those bookings.
 
 ## Entities
 
@@ -32,12 +36,21 @@ restart loses those bookings.
 no way to be contacted is invalid.
 
 **Class** — `id`, `title`, `startsAt` (ISO 8601, UTC), `capacity`. Read
-responses also carry `seatsFree` and `waitlistCount`, so the UI can show
-whether booking will mean a seat or a place in the queue.
+responses also carry `seatsFree`, which is `capacity − (booked + attended)`,
+and `waitlistCount`, the number of waitlisted bookings, so the UI can show
+whether booking will mean a seat or a place in the queue. They also carry
+`myBooking`: the reader's own active booking as `{ id, status, position }`, or
+`null` when there is none — and always `null` for the studio and for anyone
+the server does not recognise as a client. This is where a class card gets the
+client's state, so the page needs one request, not a join.
 
 **Booking** — `id`, `classId`, `clientId`, `status`, `createdAt`. Status is
-one of `booked`, `waitlisted`, `cancelled`, `attended`. A waitlisted booking
-also has a `position`, starting at 1.
+one of `booked`, `waitlisted`, `cancelled`, `attended`. `position` starts at 1
+and is a number only while the booking is `waitlisted`; otherwise it is `null`.
+
+A booking is **active** while it is `booked`, `waitlisted` or `attended`.
+Cancelling makes it invisible: lists return active bookings only, so neither
+`GET /me/bookings` nor `GET /classes/:id/bookings` ever shows a cancelled one.
 
 ```mermaid
 stateDiagram-v2
@@ -56,8 +69,8 @@ stateDiagram-v2
 A free seat makes the booking `booked`. Otherwise it is `waitlisted`. The
 waitlist is first in, first out, ordered by the time each client joined it.
 
-- A client who already has an active (`booked` or `waitlisted`) booking on a
-  class cannot book it again → `409 already_booked`.
+- A client who already has an active (`booked`, `waitlisted` or `attended`)
+  booking on a class cannot book it again → `409 already_booked`.
 - A client who cancelled may book again. That creates a **new** booking, and
   if the class is full it goes to the end of the waitlist.
 
@@ -82,7 +95,8 @@ rejected → `409 class_started`. Cancelling is rejected by rule 2.
 
 Only a `booked` booking can be marked as attended. A `waitlisted` or
 `cancelled` booking is rejected → `409 not_booked`. Attendance is not limited
-by time: the studio may mark someone before the class starts.
+by time: the studio may mark someone before the class starts. An attended
+booking keeps its seat and still blocks a second booking on the same class.
 
 ### Repeating an action
 
@@ -98,16 +112,23 @@ booking after the class has started is still a no-op, not a `409`.
 | Field | Rule |
 |---|---|
 | `name` | Required, 1–100 characters |
-| `email` | Optional, valid form, at most 255 characters |
+| `email` | Optional, at most 255 characters, and shaped `local@domain.tld`: exactly one `@`, nothing empty around it, and a dot inside the domain that is neither its first nor its last character. `a@b`, `a@b.` and `a@.b` are rejected |
 | `phone` | Optional, 5–30 characters |
-| `email` / `phone` | At least one of the two is required |
+| `email` / `phone` | At least one of the two is required. If both are missing, `field` is `email` |
 | `title` | Required, 1–100 characters |
 | `startsAt` | Required, ISO 8601. Any point in time, including the past |
 | `capacity` | Required, an integer, at least 1 |
 
+A `400` names a single `field`. When more than one field is invalid, it is the
+first one in the order of the table above.
+
 ## Order of checks
 
-1. **Credentials present and known** → else `401`
+1. **Credentials present and known** → else `401`. On the two open endpoints
+   credentials the server does not know count as none at all — an unknown
+   cookie, an unknown studio key: the schedule still answers `200` with
+   `me: null`, because a restarted server must not turn a public page into an
+   error
 2. **Right actor for this endpoint** → else `403`
 3. **Body valid** → else `400`
 4. **Resource exists** → else `404`. Ids are opaque strings, so an id in an
@@ -116,6 +137,11 @@ booking after the class has started is still a no-op, not a `409`.
 6. **Transition already happened** → `200`, nothing changes
 7. **Rule allows the transition** → else `409`
 
+At step 7, when two rules apply at once, the one about the booking wins over
+the one about the class: cancelling an `attended` booking on a class that has
+started answers `not_cancellable`, and booking a started class while holding an
+active booking answers `already_booked`.
+
 Step 5 answers `403` rather than `404`, which does tell the caller that a
 booking with that id exists. Ids are random, so they cannot be enumerated,
 and an explicit `403` is clearer to read. This is a deliberate trade-off.
@@ -123,12 +149,13 @@ and an explicit `403` is clearer to read. This is a deliberate trade-off.
 ## API
 
 All bodies are JSON. Successful responses return the entity, or a list of
-entities under `items`.
+entities under `items`. Fields a request does not know are ignored: an unknown
+field does not make the body invalid.
 
 | Method | Path | Actor | Purpose | Success |
 |---|---|---|---|---|
 | `POST` | `/clients` | — | Create a client; sets the `token` cookie | `201` client |
-| `GET` | `/classes` | Client or Studio | List classes, soonest first, with `seatsFree` and `waitlistCount` | `200` items |
+| `GET` | `/classes` | — | Every class, started ones included, soonest first, with `seatsFree`, `waitlistCount` and `myBooking` | `200` items |
 | `POST` | `/classes` | Studio | Create a class | `201` class |
 | `POST` | `/classes/:id/bookings` | Client | Book a class | `201` booking (`booked` or `waitlisted`) |
 | `GET` | `/me/bookings` | Client | Own bookings, with class details | `200` items |
@@ -138,6 +165,25 @@ entities under `items`.
 
 A full class still returns `201`: joining the waitlist is a success, not an
 error. The caller tells the two apart by `status`, not by the status code.
+
+Shapes worth naming, because the tests declare them:
+
+- `POST /clients` answers `{ id, name, email, phone }`. The token is **not** in
+  the body — it only ever travels in the cookie, which is the point of making
+  it `HttpOnly`.
+- `GET /classes` answers `{ items, me }`, where `me` is `{ id, name }` for a
+  recognised client and `null` for everyone else, the studio included. The
+  cookie is `HttpOnly`, so the page cannot read it: `me` is the only way the
+  schedule knows whether to offer actions or the identity form, and a client
+  with no bookings is not mistaken for a visitor.
+- `GET /me/bookings` items are a booking plus the class it belongs to, nested
+  as `class`.
+- `GET /classes/:id/bookings` items are a booking plus the person it belongs
+  to, nested as `client` (`id`, `name`, `email`, `phone`) — the studio has to
+  know who is in the room. `booked` and `attended` come first, in the order
+  they were made, then `waitlisted` by position.
+- Classes come back soonest first; two classes starting at the same time keep
+  the order in which they were created.
 
 ## Errors
 
@@ -165,7 +211,8 @@ the UI or a test.
 ## UI
 
 One page: the schedule. The UI is English, plain HTML and JavaScript, served
-by the same server.
+by the same server. Classes are listed in the order `GET /classes` returns
+them; the page does not sort.
 
 **The UI reflects state; it does not enforce rules.** A button is missing
 because showing it would be meaningless, not because it protects a rule. A
@@ -174,14 +221,27 @@ every rule is tested below the UI too.
 
 ### The class card
 
+The schedule is visible to anyone. While `me` is `null`, the identity form sits
+above it and the cards carry no actions: a visitor sees what is on and how full
+it is, and identifies themselves once they want a place.
+
+The card shows the client's own state on that class:
+
 | The client's situation | What is shown | Action |
 |---|---|---|
-| Seats free, no booking | `3 of 8 seats free` | `Book` |
-| Full, no booking | `Full · 2 waiting` | `Join waitlist` |
+| `me` is `null` | `3 of 8 seats free` or `Full · 2 waiting` | none |
+| No booking, seats free | `3 of 8 seats free` | `Book` |
+| No booking, class full | `Full · 2 waiting` | `Join waitlist` |
 | Booked | `Booked` | `Cancel` |
 | Waitlisted | `Waitlisted · #2` | `Leave waitlist` |
-| Class started | `Started`, card dimmed | none |
 | Attended | `Attended` | none |
+
+A class that has started is a state of the class, not of the client, so the
+two add up rather than compete: the card is dimmed and there is no action at
+all. The client's own status stays and gains `Started` — a booked client reads
+`Booked · Started`. The seat counter does not stay: a client with no booking
+reads `Started` alone, because how many seats are free no longer means
+anything once the class cannot be booked.
 
 A double booking is impossible in the UI because the button is **replaced**,
 not disabled. Disabled buttons are avoided: they do not explain themselves.
@@ -217,16 +277,24 @@ toast, and the card refreshes to the state the server reports.
 | `name` missing | `Enter your name` |
 | No email and no phone | `Enter an email or a phone number so the studio can reach you` |
 | `email` malformed | `This doesn't look like an email address` |
+| `name` longer than 100 | `Use 100 characters or fewer` |
+| `email` longer than 255 | `Use 255 characters or fewer` |
+| `phone` shorter than 5 or longer than 30 | `Enter a phone number of 5 to 30 characters` |
 | `class_started` | `This class has already started.` |
 | `already_booked` | `You're already on the list for this class.` |
-| `not_found` | `This class is no longer available.` |
+| `not_cancellable` | `The studio has already marked you as attended.` |
+| `not_found` on a class | `This class is no longer available.` |
+| `not_found` on a booking | `This booking no longer exists.` |
 | `unauthenticated` | `Your session has ended. Enter your details again.` and the identity form reappears |
 | `forbidden` | `You can't do that.` |
 | Network failure or `5xx` | `Something went wrong. Please try again.` |
 
 ### A stale screen is not an error
 
-The schedule a client is looking at can be out of date. Two cases matter:
+The page never refreshes itself: there is no polling and no push. It redraws
+after the client's own action, from the response, and changes made by anyone
+else appear only after a reload. A screen is therefore expected to be out of
+date, and the cases below are normal outcomes rather than failures:
 
 - The last seat was taken while the page was open. `Book` then returns
   `201 waitlisted`, and the UI says

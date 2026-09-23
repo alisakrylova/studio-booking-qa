@@ -64,7 +64,8 @@ only checks what the lower one cannot see.
 | Cancellation and promotion | ● | ● | ● | Unit covers the combinations; the API checks the promotion over HTTP; E2E shows it reaching the other client's screen. |
 | Started classes | ● | ● | — | Unit covers the `now == startsAt` boundary; one API test checks it against a real clock. |
 | Attendance | ● | ● | — | No UI for attendance, so the API is the top level. |
-| Access and validation | — | ● | — | Exists only in the HTTP layer. |
+| Validation | ● | ● | — | The boundaries are a pure function; two API tests show a route calls it, and rejects before doing any work. |
+| Access | — | ● | — | Exists only in the HTTP layer. |
 | What the schedule renders | ● | — | — | The render function is pure; a browser would add time, not coverage. |
 
 Both E2E marks are the same single scenario. Cases, counts and automation
@@ -76,7 +77,10 @@ status: **[test cases](docs/test-cases.md)**.
   is kept in memory and shown as one list.
 - No memberships, payments, notifications, recurring classes, admin roles,
   password registration.
-- No check against classes in the past. The studio is trusted to enter the times right, which also lets a test create a class that has already started.
+- No check against classes in the past. The studio is trusted to enter the
+  times right, which also lets a test create a class that has already started.
+- No live updates. The page redraws after the client's own action; someone
+  else's change shows up on reload.
 - No endpoints that exist for tests: no `/reset`, no seeding, no `?now=`
   override. Tests create their own data instead, which is also what lets them
   run in parallel.
