@@ -31,11 +31,10 @@ jobs:
       - name: Browsers
         run: npx playwright install --with-deps chromium
 
-      - name: API tests
-        run: npm run test:api
-
-      - name: E2E tests
-        run: npm run test:e2e
+      # One run, so the published report holds both projects: a second run
+      # would overwrite the first one's report.
+      - name: API and E2E tests
+        run: npm run test:all-playwright
 
       - name: Keep the test report
         if: always()

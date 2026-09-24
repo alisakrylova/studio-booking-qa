@@ -15,9 +15,10 @@
     "test:unit": "vitest run",
     "test:api": "playwright test --project=api",
     "test:e2e": "playwright test --project=e2e",
+    "test:all-playwright": "playwright test",
     "test:smoke": "playwright test --grep @smoke",
-    "report": "playwright show-report",
-    "test:mutation": "stryker run"
+    "test:mutation": "stryker run",
+    "report": "playwright show-report"
   },
   "dependencies": {
     "express": "^5.2.1",
