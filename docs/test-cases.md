@@ -8,10 +8,10 @@ at. The rules it checks are in [the requirements](requirements.md).
 | [Unit (rules)](#unit-rules) | 22 | 22 |
 | [Unit (validation)](#unit-validation) | 11 | 11 |
 | [Unit (rendering)](#unit-rendering) | 12 | 12 |
-| [API](#api) | 21 | 21 |
+| [API](#api) | 22 | 22 |
 | [E2E](#e2e) | 2 | 2 |
 | [Manual](#manual-only) | 2 | — |
-| **Total** | **70** | **68** |
+| **Total** | **71** | **69** |
 
 Four cases carry the `@smoke` tag — a visitor can become a client (E-02),
 booking works (A-01), the waitlist promotion works (A-05), and a person sees it
@@ -109,6 +109,7 @@ the code.
 | A-04 | Book a class that already started | `409 class_started` |
 | A-05 | Cancel a `booked` booking while someone is waiting `@smoke` | `200` with the booking back as `cancelled`, and the class roster shows the first waiting client as `booked` |
 | A-06 | Cancel an `attended` booking | `409 not_cancellable` |
+| A-22 | Cancel the same booking twice | `200` both times with the same body — a repeat is answered before the rules, as the requirements say |
 | A-07 | Mark attendance on a `waitlisted` booking | `409 not_booked` |
 | A-08 | Mark attendance twice | `200`, body unchanged |
 | A-09 | Create a client with neither email nor phone | `400 validation_failed`, `field: "email"` — the route calls validation and dresses the result as the envelope |
@@ -156,7 +157,7 @@ fails at a cheaper level.
 |---|---|
 | Pagination and virtualization | Not built. A studio schedule fits in one response. |
 | Cancelling after the class started, over HTTP | Booking is only possible before the start, so setting this up would mean waiting for the real clock. U-09 holds the rule, and A-04 shows the clock reaching the rules through the booking route — the cancel route passes `now` of its own, and that hand-off stays unverified. Accepted risk; the cure is a test that waits a second or two. |
-| Rate limiting and load | The app is not deployed publicly. |
+| Rate limiting and load | The app is not deployed anywhere; only its reports are published. |
 | Session recovery | There is no recovery by design: no passwords and no email delivery. |
 | Form messages, toast wording and the in-flight button | Browser-only details that change no state. The rules behind them are asserted in the validation and API cases, where breaking one actually costs something. |
 | Browser compatibility | E2E runs in Chromium only. The page is plain HTML and CSS with nothing engine-specific, so a second engine would mostly repeat the same assertions for triple the CI time. First thing to add if a browser-specific bug shows up. |

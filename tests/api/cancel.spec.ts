@@ -99,3 +99,21 @@ test('A-21 leaving the queue moves the people behind, and nobody into the room',
   const seen = schedule.items.find((item: { id: string }) => item.id === studioClass.id)
   expect(seen).toMatchObject({ seatsFree: 0, waitlistCount: 1 })
 })
+
+test('A-22 cancelling twice changes nothing the second time', async ({
+  client,
+  newClass,
+}) => {
+  const studioClass = await newClass({ capacity: 1 })
+  const booking = matchingBooking(
+    await (await client.api.post(`/classes/${studioClass.id}/bookings`)).json(),
+  )
+
+  const first = await client.api.post(`/bookings/${booking.id}/cancel`)
+  const again = await client.api.post(`/bookings/${booking.id}/cancel`)
+
+  expect(first.status()).toBe(200)
+  expect(again.status()).toBe(200)
+  expect(await again.json()).toEqual(await first.json())
+  expect(matchingBooking(await again.json())).toMatchObject({ status: 'cancelled' })
+})
