@@ -1,4 +1,4 @@
-import { aTitle, expect, test } from './fixtures.ts'
+import { arranged, aTitle, expect, test } from './fixtures.ts'
 
 test('E-02 a visitor sees the schedule first and introduces themselves to book @smoke', async ({
   studio,
@@ -7,17 +7,16 @@ test('E-02 a visitor sees the schedule first and introduces themselves to book @
   const title = aTitle('Evening flow')
 
   await test.step('the studio opens a class', async () => {
-    const response = await studio.post('/classes', {
-      data: {
-        title,
-        startsAt: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-        capacity: 4,
-      },
-    })
-    expect(
-      response.status(),
-      `the studio could not open a class: ${await response.text()} — do the server and the tests agree on STUDIO_KEY?`,
-    ).toBe(201)
+    await arranged(
+      await studio.post('/classes', {
+        data: {
+          title,
+          startsAt: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+          capacity: 4,
+        },
+      }),
+      'opening a class as the studio',
+    )
   })
 
   const card = visitor.getByTestId('class-card').filter({ hasText: title })

@@ -14,16 +14,38 @@ const studioKey = process.env.STUDIO_KEY ?? 'studio-key-for-tests'
 let titles = 0
 export const aTitle = (about: string) => `${about} ${process.pid}-${++titles}`
 
+/**
+ * Arranging is not the thing under test, so a failure here names a likely
+ * cause. The message is built only when it is needed: passed to `expect` it
+ * would become the title of a step that passed.
+ */
+export async function arranged<T extends { status(): number; text(): Promise<string> }>(
+  response: T,
+  what: string,
+): Promise<T> {
+  if (response.status() === 201) return response
+
+  const hint =
+    response.status() === 401 ? ' — do the server and the tests agree on STUDIO_KEY?' : ''
+  const failure = new Error(
+    `${what} failed with ${response.status()}: ${await response.text()}${hint}`,
+  )
+  Error.captureStackTrace(failure, arranged)
+  throw failure
+}
+
 /** Signed in through the API: E-02 is the scenario about the form. */
 function clientPage(browser: Browser, name: string, opened: BrowserContext[]) {
   return base.step(
     `${name} arrives`,
     async () => {
       const api = await request.newContext({ baseURL })
-      const response = await api.post('/clients', {
-        data: { name, email: `${name.toLowerCase()}@example.com` },
-      })
-      expect(response.status(), await response.text()).toBe(201)
+      const response = await arranged(
+        await api.post('/clients', {
+          data: { name, email: `${name.toLowerCase()}@example.com` },
+        }),
+        'creating a client',
+      )
 
       const cookie = response
         .headersArray()

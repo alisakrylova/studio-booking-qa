@@ -80,14 +80,24 @@ export function matching<T>(
   throw failure
 }
 
-/** Arranging is not the thing under test, so its failures name a likely cause. */
-export async function whyNot(response: { status(): number; text(): Promise<string> }) {
-  const body = await response.text()
+/**
+ * Arranging is not the thing under test, so a failure here names a likely
+ * cause. The message is built only when it is needed: passed to `expect` it
+ * would become the title of a step that passed.
+ */
+export async function arranged<T extends { status(): number; text(): Promise<string> }>(
+  response: T,
+  what: string,
+): Promise<T> {
+  if (response.status() === 201) return response
+
   const hint =
-    response.status() === 401
-      ? ' — do the server and the tests agree on STUDIO_KEY?'
-      : ''
-  return `the arrangement failed with ${response.status()}: ${body}${hint}`
+    response.status() === 401 ? ' — do the server and the tests agree on STUDIO_KEY?' : ''
+  const failure = new Error(
+    `${what} failed with ${response.status()}: ${await response.text()}${hint}`,
+  )
+  Error.captureStackTrace(failure, arranged)
+  throw failure
 }
 
 export const inAnHour = () => new Date(Date.now() + 60 * 60 * 1000).toISOString()
@@ -130,10 +140,12 @@ export const test = base.extend<Fixtures>({
       const api = await request.newContext({ baseURL })
       opened.push(api)
 
-      const response = await api.post('/clients', {
-        data: { name, email: `${name.toLowerCase()}@example.com` },
-      })
-      expect(response.status(), await whyNot(response)).toBe(201)
+      const response = await arranged(
+        await api.post('/clients', {
+          data: { name, email: `${name.toLowerCase()}@example.com` },
+        }),
+        'creating a client',
+      )
       const client = matchingClient(await response.json(), 'client we arranged')
 
       return { api, id: client.id, name: client.name }
@@ -148,14 +160,16 @@ export const test = base.extend<Fixtures>({
 
   newClass: async ({ studio }, use) => {
     await use(async (over = {}) => {
-      const response = await studio.post('/classes', {
-        data: {
-          title: over.title ?? aTitle('Class'),
-          startsAt: over.startsAt ?? inAnHour(),
-          capacity: over.capacity ?? 1,
-        },
-      })
-      expect(response.status(), await whyNot(response)).toBe(201)
+      const response = await arranged(
+        await studio.post('/classes', {
+          data: {
+            title: over.title ?? aTitle('Class'),
+            startsAt: over.startsAt ?? inAnHour(),
+            capacity: over.capacity ?? 1,
+          },
+        }),
+        'opening a class as the studio',
+      )
       return matchingClass(await response.json(), 'class we arranged')
     })
   },
