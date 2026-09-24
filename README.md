@@ -7,6 +7,12 @@ The point of this repository is the test strategy. The app is deliberately
 tiny. The rules were written before any code, and the tests check the rules,
 not the implementation.
 
+Coverage is half of it. The other half is what a failure tells you, and
+whether a test can fail at all. Every rule here was broken on purpose to see
+which case would notice; mutation testing asks the same of the pure modules on
+every push; and the reports are treated as a deliverable, not as output —
+[see what a failure looks like](#what-a-failure-looks-like).
+
 - [What the app does](#what-the-app-does)
 - [Rules](#rules)
 - [Rule & where it is tested](#rule--where-it-is-tested)
@@ -16,7 +22,9 @@ not the implementation.
 
 The detail lives in two documents: **[requirements](docs/requirements.md)**,
 down to status codes and error texts, and **[test cases](docs/test-cases.md)**,
-every case and the level it runs at.
+every case and the level it runs at. The last run on `main` publishes its
+**[reports](https://alisakrylova.github.io/studio-booking-qa/)** — the cases
+with their steps, and what the unit tests would fail to notice.
 
 ## What the app does
 
@@ -101,6 +109,9 @@ npm run test:smoke    # the four cases that say whether the rest is worth runnin
 npm run test:mutation # what the unit tests would fail to notice
 npm run report        # the last Playwright run, as a page
 ```
+
+The same reports from CI are published at
+<https://alisakrylova.github.io/studio-booking-qa/>.
 
 Playwright starts the app itself on a port of its own, so tests never meet a
 server left running on 3000.
